@@ -99,11 +99,11 @@ def get_schedule_text(calendar_data, target_date=None):
                         couple_type = "Практика"
 
                     message += (f"\n🕒 Пара №{pair_number} ({time_})\n"
-                                f"📝 {couple_type}\n"
                                 f"📚 {discipline}\n"
+                                f"📝 {couple_type}\n"
+                                f"👥 {subgroup_text}\n"
                                 f"👨‍🏫 {teacher}\n"
-                                f"🏫 {cabinet}, {address}\n"
-                                f"👥 {subgroup_text}\n")
+                                f"🏫 {cabinet}, {address}\n")
         else:
             message += "\n📭 Занятий нет."
 
