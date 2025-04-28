@@ -92,12 +92,14 @@ def get_schedule_text(calendar_data, target_date=None):
                     teacher = lesson.get("teacher", {}).get("name", "преподаватель неизвестен")
                     cabinet = lesson.get("place", {}).get("cabinet", "кабинет не указан")
                     address = lesson.get("place", {}).get("housing", {}).get("address", "")
+                    couple_type = lesson.get("couple", {}).get("couple_type", "не указано")
 
                     message += (f"\n🕒 Пара №{pair_number} ({time_})\n"
                                 f"📖 {discipline}\n"
                                 f"👨‍🏫 {teacher}\n"
                                 f"🏛️ {cabinet}, {address}\n"
-                                f"👥 {subgroup_text}\n")
+                                f"👥 {subgroup_text}\n"
+                                f"📚 {couple_type}")
         else:
             message += "\n📭 Занятий нет."
 
