@@ -96,11 +96,11 @@ def get_schedule_text(calendar_data, target_date=None):
                     if lesson.get("couple", {}).get("couple_type", "не указано") == "лек.":
                         couple_type = "Лекция"
                     if lesson.get("couple", {}).get("couple_type", "не указано") == "прак.":
-                        couple_type = "Практика"
+                        couple_type = "🟦 Практика"
 
                     message += (f"\n🕒 Пара №{pair_number} ({time_})\n"
                                 f"📚 {discipline}\n"
-                                f"📝 {couple_type}\n"
+                                f"{couple_type}\n"
                                 f"👥 {subgroup_text}\n"
                                 f"👨‍🏫 {teacher}\n"
                                 f"🏫 {cabinet}, {address}\n")
