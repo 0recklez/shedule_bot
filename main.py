@@ -94,9 +94,19 @@ def get_schedule_text(calendar_data, target_date=None):
                     address = lesson.get("place", {}).get("housing", {}).get("address", "")
                     couple_type = lesson.get("couple", {}).get("couple_type", "не указано")
                     if lesson.get("couple", {}).get("couple_type", "не указано") == "лек.":
-                        couple_type = "Лекция"
+                        couple_type = "🟩 Лекция"
                     if lesson.get("couple", {}).get("couple_type", "не указано") == "прак.":
                         couple_type = "🟦 Практика"
+                    if lesson.get("couple", {}).get("couple_type", "не указано") == "лаб.р.":
+                        couple_type = "🟧 Лабораторная"
+                    if lesson.get("couple", {}).get("couple_type", "не указано") == "зач.":
+                        couple_type = "🟧 Зачет"
+                    if lesson.get("couple", {}).get("couple_type", "не указано") == "экз.":
+                        couple_type = "🟥 Экзамен"
+                    if lesson.get("couple", {}).get("couple_type", "не указано") == "КСР":
+                        couple_type = "🟦 КСР"
+                    if lesson.get("couple", {}).get("couple_type", "не указано") == "кон.":
+                        couple_type = "🟦 Контрольная"
 
                     message += (f"\n🕒 Пара №{pair_number} ({time_})\n"
                                 f"📚 {discipline}\n"
