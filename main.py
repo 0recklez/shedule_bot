@@ -37,10 +37,9 @@ class DialogState(StatesGroup):
     ask_group = State()
 
 
-# --- Кэширование расписания ---
 schedule_cache = {}
 cache_lock = threading.Lock()
-CACHE_TTL_SECONDS = 300  # 5 минут
+CACHE_TTL_SECONDS = 1200
 
 
 def get_calendar_data(group_name):
@@ -80,7 +79,6 @@ def get_calendar_data_cached(group_name):
     return data
 
 
-# --- Асинхронный запуск Selenium через executor ---
 executor = ThreadPoolExecutor(max_workers=2)
 
 
