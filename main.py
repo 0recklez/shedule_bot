@@ -1,5 +1,7 @@
 import asyncio
 import time
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command
 from aiogram.types import Message, KeyboardButton, CallbackQuery
@@ -35,6 +37,12 @@ class DialogState(StatesGroup):
     ask_group = State()
 
 
+# --- Кэширование расписания ---
+schedule_cache = {}
+cache_lock = threading.Lock()
+CACHE_TTL_SECONDS = 300  # 5 минут
+
+
 def get_calendar_data(group_name):
     options = Options()
     options.add_argument("--headless")
@@ -57,6 +65,28 @@ def get_calendar_data(group_name):
 
     driver.quit()
     return calendar_data
+
+
+def get_calendar_data_cached(group_name):
+    now = time.time()
+    cache_key = group_name
+    with cache_lock:
+        entry = schedule_cache.get(cache_key)
+        if entry and now - entry["timestamp"] < CACHE_TTL_SECONDS:
+            return entry["data"]
+    data = get_calendar_data(group_name)
+    with cache_lock:
+        schedule_cache[cache_key] = {"timestamp": now, "data": data}
+    return data
+
+
+# --- Асинхронный запуск Selenium через executor ---
+executor = ThreadPoolExecutor(max_workers=2)
+
+
+async def get_calendar_data_async(group_name):
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(executor, get_calendar_data_cached, group_name)
 
 
 def get_schedule_text(calendar_data, target_date=None):
@@ -139,11 +169,10 @@ async def start_handler(message: Message):
 @dp.message(F.text == '🗓Расписание на сегодня')
 async def get_group_handler(message: Message, state: FSMContext):
     group_name = "ИСТ-24-1"
-
     await state.update_data(group_name=group_name)
     await message.answer(f"📡 Получаю расписание на сегодня")
     try:
-        calendar_data = get_calendar_data(group_name)
+        calendar_data = await get_calendar_data_async(group_name)
         target_date = datetime.now().strftime("%Y-%m-%d")
         result = get_schedule_text(calendar_data, target_date)
         await message.answer(result)
@@ -180,7 +209,7 @@ async def process_simple_calendar(
         group_name, date_input = 'ИСТ-24-1', task_time.strftime("%Y-%m-%d")
         await callback_query.message.answer(f"📡 Загружаю расписание на {date_input}")
         try:
-            calendar_data = get_calendar_data(group_name)
+            calendar_data = await get_calendar_data_async(group_name)
             result = get_schedule_text(calendar_data, date_input)
             await callback_query.message.answer(result)
         except Exception as e:
