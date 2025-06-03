@@ -183,7 +183,7 @@ async def get_group_handler(message: Message, state: FSMContext):
 async def get_group_handler(message: Message, state: FSMContext):
     group_name = "ИСТ-24-1"
     await state.update_data(group_name=group_name)
-    await message.answer(f"📡 Получаю расписание на сегодня")
+    await message.answer(f"📡 Получаю расписание на завтра")
     try:
         calendar_data = await get_calendar_data_async(group_name)
         target_date = datetime.now() + timedelta(days=1)
