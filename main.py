@@ -165,19 +165,6 @@ async def start_handler(message: Message):
     )
 
 
-@dp.message()
-async def other_message(message: Message):
-    welcome_text = "😳 Я вас не понял. Выбери действие из меню, чтобы получить расписание."
-    await message.answer(
-        text=welcome_text,
-        reply_markup=kb_builder2.as_markup(
-            resize_keyboard=True,
-            one_time_keyboard=False,
-            input_field_placeholder='Выберите действие'
-        )
-    )
-
-
 @dp.message(F.text == '🗓Расписание на сегодня')
 async def get_group_handler(message: Message, state: FSMContext):
     group_name = "ИСТ-24-1"
@@ -241,6 +228,19 @@ async def process_simple_calendar(
             await callback_query.message.answer(result)
         except Exception as e:
             await callback_query.message.answer(f"❌ Не удалось получить расписание: {e}")
+
+
+@dp.message()
+async def other_message(message: Message):
+    welcome_text = "😳 Я вас не понял. Выбери действие из меню, чтобы получить расписание."
+    await message.answer(
+        text=welcome_text,
+        reply_markup=kb_builder2.as_markup(
+            resize_keyboard=True,
+            one_time_keyboard=False,
+            input_field_placeholder='Выберите действие'
+        )
+    )
 
 
 async def main():
