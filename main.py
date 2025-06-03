@@ -16,7 +16,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from datetime import datetime
+from datetime import timedelta, datetime
 from config import Config, load_config
 
 config: Config = load_config()
@@ -27,9 +27,10 @@ dp = Dispatcher()
 
 button_shedule_today = KeyboardButton(text="🗓Расписание на сегодня")
 button_shedule_date = KeyboardButton(text="🗓Расписание по дате")
+button_shedule_tomorrow = KeyboardButton(text="🗓Расписание на завтра")
 
 kb_builder2 = ReplyKeyboardBuilder()
-kb_builder2.row(button_shedule_date, button_shedule_today, width=2)
+kb_builder2.row(button_shedule_today, button_shedule_tomorrow, button_shedule_date, width=2)
 
 
 class DialogState(StatesGroup):
@@ -172,6 +173,21 @@ async def get_group_handler(message: Message, state: FSMContext):
     try:
         calendar_data = await get_calendar_data_async(group_name)
         target_date = datetime.now().strftime("%Y-%m-%d")
+        result = get_schedule_text(calendar_data, target_date)
+        await message.answer(result)
+    except Exception as e:
+        await message.answer(f"❌ Не удалось получить расписание: {e}")
+
+
+@dp.message(F.text == '🗓Расписание на завтра')
+async def get_group_handler(message: Message, state: FSMContext):
+    group_name = "ИСТ-24-1"
+    await state.update_data(group_name=group_name)
+    await message.answer(f"📡 Получаю расписание на сегодня")
+    try:
+        calendar_data = await get_calendar_data_async(group_name)
+        target_date = datetime.now() + timedelta(days=1)
+        target_date = target_date.strftime("%Y-%m-%d")
         result = get_schedule_text(calendar_data, target_date)
         await message.answer(result)
     except Exception as e:
