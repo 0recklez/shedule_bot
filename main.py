@@ -36,6 +36,7 @@ kb_builder2.row(button_shedule_today, button_shedule_tomorrow, button_shedule_da
 class DialogState(StatesGroup):
     add_time = State()
     ask_group = State()
+    add_group = State()
 
 
 schedule_cache = {}
@@ -153,10 +154,21 @@ def get_schedule_text(calendar_data, target_date=None):
 
 
 @dp.message(Command("start"))
-async def start_handler(message: Message):
-    welcome_text = "👋 Привет! Выбери действие из меню, чтобы получить расписание."
+async def start_handler(message: Message, state: FSMContext):
+    await message.answer("👋 Привет! Напиши название своей группы (например ИСТ-24-1)")
+    await state.set_state(DialogState.ask_group)
+
+
+@dp.message(DialogState.ask_group)
+async def process_group_name(message: Message, state: FSMContext):
+    if message.text in ["🗓Расписание на сегодня", "🗓Расписание на завтра", "🗓Расписание по дате"]:
+        await message.answer("❗️Пожалуйста, введите название группы вручную, например: `ИСТ-24-1`")
+        return
+    group_name = message.text.upper().strip()
+    await state.update_data(group_name=group_name)
+    await state.set_state(DialogState.add_group)
     await message.answer(
-        text=welcome_text,
+        f"✅ Группа установлена: {group_name}",
         reply_markup=kb_builder2.as_markup(
             resize_keyboard=True,
             one_time_keyboard=False,
@@ -167,22 +179,28 @@ async def start_handler(message: Message):
 
 @dp.message(F.text == '🗓Расписание на сегодня')
 async def get_group_handler(message: Message, state: FSMContext):
-    group_name = "ИСТ-24-1"
-    await state.update_data(group_name=group_name)
+    data = await state.get_data()
+    group_name = data.get("group_name")
+    if not group_name:
+        await message.answer("❗️Сначала введите группу через /start.")
+        return
     await message.answer(f"📡 Получаю расписание на сегодня")
     try:
         calendar_data = await get_calendar_data_async(group_name)
         target_date = datetime.now().strftime("%Y-%m-%d")
         result = get_schedule_text(calendar_data, target_date)
         await message.answer(result)
-    except Exception as e:
-        await message.answer(f"❌ Не удалось получить расписание: {e}")
+    except:
+        await message.answer(f"❌ Группа не найдена, введите другую через /start ")
 
 
 @dp.message(F.text == '🗓Расписание на завтра')
 async def get_group_handler(message: Message, state: FSMContext):
-    group_name = "ИСТ-24-1"
-    await state.update_data(group_name=group_name)
+    data = await state.get_data()
+    group_name = data.get("group_name")
+    if not group_name:
+        await message.answer("❗️Сначала введите группу через /start.")
+        return
     await message.answer(f"📡 Получаю расписание на завтра")
     try:
         calendar_data = await get_calendar_data_async(group_name)
@@ -190,8 +208,8 @@ async def get_group_handler(message: Message, state: FSMContext):
         target_date = target_date.strftime("%Y-%m-%d")
         result = get_schedule_text(calendar_data, target_date)
         await message.answer(result)
-    except Exception as e:
-        await message.answer(f"❌ Не удалось получить расписание: {e}")
+    except:
+        await message.answer(f"❌ Группа не найдена, введите другую через /start ")
 
 
 @dp.message(F.text == "🗓Расписание по дате")
@@ -208,7 +226,7 @@ async def process_simple_calendar(
         callback_data: CallbackData,
         state: FSMContext
 ):
-    user = callback_query.from_user
+
     locale = "ru_RU.utf8"
 
     calendar = SimpleCalendar(locale=locale, show_alerts=True)
@@ -219,15 +237,18 @@ async def process_simple_calendar(
     if selected:
         await state.update_data(task_time=date)
         task_time = date
-
-        group_name, date_input = 'ИСТ-24-1', task_time.strftime("%Y-%m-%d")
+        data = await state.get_data()
+        group_name, date_input = data.get("group_name"), task_time.strftime("%Y-%m-%d")
+        if not group_name:
+            await callback_query.message.answer("❗️Сначала введите группу через /start.")
+            return
         await callback_query.message.answer(f"📡 Загружаю расписание на {date_input}")
         try:
             calendar_data = await get_calendar_data_async(group_name)
             result = get_schedule_text(calendar_data, date_input)
             await callback_query.message.answer(result)
-        except Exception as e:
-            await callback_query.message.answer(f"❌ Не удалось получить расписание: {e}")
+        except:
+            await callback_query.message.answer(f"❌ Группа не найдена, введите другую через /start ")
 
 
 @dp.message()
