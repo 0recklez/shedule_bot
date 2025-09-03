@@ -48,7 +48,7 @@ def register_all_handlers(dp: Dispatcher, bot: Bot):
             await message.answer(result)
         except Exception as e:
             print(f"Ошибка при получении расписания: {e}")
-            await message.answer(f"❌ Произошла ошибка. Проверьте название группы или попробуйте позже.")
+            await message.answer(f"❌Произошла ошибка. Попробуйте ввести другую группу через /start")
 
     @dp.message(F.text == '🗓Расписание на завтра')
     async def schedule_tomorrow_handler(message: Message, state: FSMContext):
@@ -65,7 +65,7 @@ def register_all_handlers(dp: Dispatcher, bot: Bot):
             result = get_schedule_text(calendar_data, target_date)
             await message.answer(result)
         except:
-            await message.answer(f"❌ Группа не найдена, введите другую через /start ")
+            await message.answer(f"❌Произошла ошибка. Попробуйте ввести другую группу через /start")
 
     @dp.message(F.text == "🗓Расписание по дате")
     async def date_handler(message: Message, state: FSMContext):
