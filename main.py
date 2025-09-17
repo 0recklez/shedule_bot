@@ -89,12 +89,22 @@ async def get_calendar_data_async(group_name):
     return await loop.run_in_executor(executor, get_calendar_data_cached, group_name)
 
 
-def get_schedule_text(calendar_data, target_date=None):
+def get_schedule_text(calendar_data, target_date: str = None) -> str:
     if target_date is None:
         target_date = datetime.now().strftime("%Y-%m-%d")
 
     found = False
     message = f"📅 Расписание на {target_date}:\n"
+
+    couple_type_map = {
+        "лек.": "🟩 Лекция",
+        "прак.": "🟦 Практика",
+        "лаб. р.": "🟧 Лабораторная",
+        "зач.": "🟧 Зачет",
+        "экз.": "🟥 Экзамен",
+        "КСР": "🟦 КСР",
+        "кон.": "🟦 Контрольная"
+    }
 
     for day in calendar_data:
         date = day.get("date")
@@ -122,21 +132,8 @@ def get_schedule_text(calendar_data, target_date=None):
                     teacher = lesson.get("teacher", {}).get("name", "преподаватель неизвестен")
                     cabinet = lesson.get("place", {}).get("cabinet", "кабинет не указан")
                     address = lesson.get("place", {}).get("housing", {}).get("address", "")
-                    couple_type = lesson.get("couple", {}).get("couple_type", "не указано")
-                    if lesson.get("couple", {}).get("couple_type", "не указано") == "лек.":
-                        couple_type = "🟩 Лекция"
-                    if lesson.get("couple", {}).get("couple_type", "не указано") == "прак.":
-                        couple_type = "🟦 Практика"
-                    if lesson.get("couple", {}).get("couple_type", "не указано") == "лаб. р.":
-                        couple_type = "🟧 Лабораторная"
-                    if lesson.get("couple", {}).get("couple_type", "не указано") == "зач.":
-                        couple_type = "🟧 Зачет"
-                    if lesson.get("couple", {}).get("couple_type", "не указано") == "экз.":
-                        couple_type = "🟥 Экзамен"
-                    if lesson.get("couple", {}).get("couple_type", "не указано") == "КСР":
-                        couple_type = "🟦 КСР"
-                    if lesson.get("couple", {}).get("couple_type", "не указано") == "кон.":
-                        couple_type = "🟦 Контрольная"
+                    couple_type_key = couple.get("couple_type", "не указано")
+                    couple_type = couple_type_map.get(couple_type_key, couple_type_key)
 
                     message += (f"\n🕒 Пара №{pair_number} ({time_})\n"
                                 f"📚 {discipline}\n"
@@ -223,7 +220,7 @@ async def date_handler(message: Message, state: FSMContext):
 @dp.callback_query(SimpleCalendarCallback.filter(), DialogState.add_time)
 async def process_simple_calendar(
         callback_query: CallbackQuery,
-        callback_data: CallbackData,
+        callback_data: SimpleCalendarCallback,  # Исправлен тип
         state: FSMContext
 ):
 
